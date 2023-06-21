@@ -22,6 +22,40 @@ sys.path.insert(0, "/home/wb411133/Code/gostrocks/src")
 import GOSTRocks.rasterMisc as rMisc
 import GOSTRocks.mapMisc as mapMisc
 
+class suitability_layer:
+    ''' suitability layer
+    '''
+    def __init__(self, raster_path, suit_def):
+        ''' Process raster data for inclusion in suitability analysis
+        
+        :param raster_path: file path to data to process (needs to be read by rasterio) 
+        :type raster_path: string
+        :param suit_def: dictionary defining parameters for scaling
+        :type suit_def: dictionary containing the following acceptable keys
+            classifier - define how the variables are ranked in suitability classification options are 
+                        (linear-ascending, linear-descending, binary, ranges, convert)
+            min-val/max-val - define un acceptable values below and above the definition
+            ranges: used in "ranges" classifier, defines values to plug into np.digitize
+            range_definition: used in ranges classifier, defines suitability values for ranges
+            map_vals: used in convert classified, defines how to convert integer values in raster to suitability values            
+        '''
+        
+        self.raster_path = raster_path
+        self.inR = rasterio.open(raster_path)
+        self.suit_def = suit_def
+        
+    def scale_raw(self, out_folder, overwrite=False, resampling_type='nearest'):
+        ''' Scale the base raster data to the template_raster and write to folder
+        
+        :param out_folder: path to folder to create output_raster
+        :param overwrite: boolean to wverwrite existign  dataset
+        :param resampling_type: variable to pass to rMisc.standardizeInputRasters
+        '''
+        out_file = os.path.join(out_folder, os.path.basename(self.raster_path))
+        if not os.path.exists(out_file) or overwrite:
+            in_template = rasterio.open(self.template_raster)
+            data, profile = rMisc.standardizeInputRasters(self.inR, in_template, out_file, resampling_type=resampling_type)
+
 def re_classify(array, defs, no_data):
     ''' re-classify array based on categories in defs
     
